@@ -4,6 +4,7 @@ from PIL import Image
 import os
 from flask import Flask, render_template_string, request
 import re  # for regular expressions to extract phone numbers from URLs or text
+from urllib.parse import urlparse, parse_qs  # to handle URL parsing
 
 app = Flask(__name__)
 
@@ -28,13 +29,42 @@ def extract_phone_number_from_qr(image_path):
     value, pts, qr_code = detector.detectAndDecode(gray)
     
     if value:
-        # Try extracting phone number from the value (in case it's a URL or text)
-        phone_number = extract_phone_number(value)
+        # Try extracting phone number from the value (which could be a URL or text)
+        phone_number = extract_phone_number_from_text(value)
         return phone_number
     return None
 
 # Function to extract phone number using a regular expression
-def extract_phone_number(text):
+def extract_phone_number_from_text(text):
+    # First check if the text is a URL and extract parameters
+    phone_number = None
+    if "phonepe" in text.lower() or "googlepay" in text.lower() or "fampay" in text.lower():
+        # Try parsing the URL or string content
+        phone_number = extract_phone_number_from_url(text)
+
+    # If no phone number is found, try matching a phone number directly
+    if not phone_number:
+        phone_number = extract_phone_number_using_regex(text)
+
+    return phone_number
+
+# Function to extract phone number from URL parameters
+def extract_phone_number_from_url(url):
+    # Parse the URL to extract query parameters
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+    
+    # Look for a phone number in query parameters (common in payment app URLs)
+    for param, values in query_params.items():
+        for value in values:
+            # Check if the value looks like a phone number
+            phone_number = extract_phone_number_using_regex(value)
+            if phone_number:
+                return phone_number
+    return None
+
+# Function to extract phone number using a regular expression
+def extract_phone_number_using_regex(text):
     # Regular expression for matching phone numbers
     phone_pattern = r'\+?\d{1,4}[\s\-]?\(?\d+\)?[\s\-]?\d+[\s\-]?\d+'
     match = re.search(phone_pattern, text)
