@@ -1,4 +1,4 @@
 Flask 
-pyzbar 
+opencv-python
 phonenumbers 
 Pillow
