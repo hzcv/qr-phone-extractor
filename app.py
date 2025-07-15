@@ -1,8 +1,8 @@
-from flask import Flask, render_template_string, request
-import phonenumbers
 import cv2
+import phonenumbers
 from PIL import Image
 import os
+from flask import Flask, render_template_string, request
 
 app = Flask(__name__)
 
@@ -21,9 +21,10 @@ def extract_phone_number_from_qr(image_path):
     img = cv2.imread(image_path)
     # Convert image to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # Detect QR code in the image
+    # Create QRCodeDetector object
     detector = cv2.QRCodeDetector()
-    value, pts, qr_code = detector(gray)
+    # Use the detectAndDecode method to extract the QR code's value
+    value, pts, qr_code = detector.detectAndDecode(gray)
     if value:
         return value
     return None
