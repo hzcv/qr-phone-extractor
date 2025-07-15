@@ -1,6 +1,6 @@
 from flask import Flask, render_template_string, request
 import phonenumbers
-from pyzbar.pyzbar import decode
+import cv2
 from PIL import Image
 import os
 
@@ -15,15 +15,17 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-# Function to extract phone number from the QR code
+# Function to extract phone number from the QR code using OpenCV
 def extract_phone_number_from_qr(image_path):
-    img = Image.open(image_path)
-    qr_codes = decode(img)
-
-    for qr_code in qr_codes:
-        # Extract the data from the QR code
-        phone_number = qr_code.data.decode('utf-8')
-        return phone_number
+    # Load the image using OpenCV
+    img = cv2.imread(image_path)
+    # Convert image to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # Detect QR code in the image
+    detector = cv2.QRCodeDetector()
+    value, pts, qr_code = detector(gray)
+    if value:
+        return value
     return None
 
 # Function to get country info from phone number
