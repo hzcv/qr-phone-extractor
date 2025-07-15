@@ -3,6 +3,7 @@ import phonenumbers
 from PIL import Image
 import os
 from flask import Flask, render_template_string, request
+import re  # for regular expressions to extract phone numbers from URLs or text
 
 app = Flask(__name__)
 
@@ -25,8 +26,21 @@ def extract_phone_number_from_qr(image_path):
     detector = cv2.QRCodeDetector()
     # Use the detectAndDecode method to extract the QR code's value
     value, pts, qr_code = detector.detectAndDecode(gray)
+    
     if value:
-        return value
+        # Try extracting phone number from the value (in case it's a URL or text)
+        phone_number = extract_phone_number(value)
+        return phone_number
+    return None
+
+# Function to extract phone number using a regular expression
+def extract_phone_number(text):
+    # Regular expression for matching phone numbers
+    phone_pattern = r'\+?\d{1,4}[\s\-]?\(?\d+\)?[\s\-]?\d+[\s\-]?\d+'
+    match = re.search(phone_pattern, text)
+    
+    if match:
+        return match.group(0)
     return None
 
 # Function to get country info from phone number
